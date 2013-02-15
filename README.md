@@ -10,3 +10,8 @@ The server side portion of this runs on node and manages device communication.
 # Client
 
 A JS library that sends/receives messages to the chat server.
+
+
+# References
+
+[Node Websocket Library](http://einaros.github.com/ws)
