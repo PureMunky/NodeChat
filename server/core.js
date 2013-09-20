@@ -1,35 +1,34 @@
 var http = require('http'),
-	WebSocket = require('ws'),		// npm install ws
-	ws = new WebSocket('ws://localhost'),
-	port = 1337,
-	log = [];
+	WebSocketServer = require('ws').Server,		// npm install ws
+	wss = new WebSocketServer({port: 8080});
 
-ws.on('open', function () {
-	ws.send('welcome');
+wss.broadcast = function (data) {
+	for(var i = 0; i < this.clients.length; i++)
+		this.clients[i].send(data);
+};
+
+wss.on('connection', function (ws) {
+	console.log('connected');
+
+	ws.on('open', function () {
+		console.log('connected');
+		ws.send('welcome');
+	});
+
+	ws.on('close', function () {
+		console.log('disconnected');
+	});
+
+	ws.on('message', function (data, flags){
+		try {
+			var jsonData = JSON.parse(data);
+			console.log('message recieved ' + jsonData.test);
+			wss.broadcast(jsonData.test);
+		} catch (e) {
+			console.log('message recieved ' + data);
+			wss.broadcast(data);
+		}
+	});
 });
 
-ws.on('message', function (data, flags){
-	switch (data.action) {
-		case 'get':
-			ws.send(log);
-			break;
-		case 'send':
-			log.push(data.text)
-			break;
-		default:
-			ws.send(log[log.length - 1]);
-	}
-});
 
-http.createServer(function (request, response) {
- 	response.writeHead(200, {'Content-Type': 'text/plain'});
-	response.write('Start of List\n');
-	
-	for(var i = 0; i < log.length, i++) {
-		response.write(log[i] + '\n');
-	}
-	
-	response.end('End of List\n');
-	
-	//writeServerLog(request);
-}).listen(port);
